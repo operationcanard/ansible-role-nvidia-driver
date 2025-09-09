@@ -72,18 +72,27 @@
   environment: "{{proxy_env if proxy_env is defined else {}}}"
   when: ansible_distribution_major_version < '8'
 
-- name: install driver packages RHEL/CentOS 8 and newer
+- name: install driver packages RHEL/CentOS 8
   dnf:
     name: "{{ nvidia_driver_package_version | ternary('@nvidia-driver:'+nvidia_driver_package_version, '@nvidia-driver:'+nvidia_driver_rhel_branch+'-dkms') }}"
     state: "{{ nvidia_driver_package_state }}"
     autoremove: "{{ nvidia_driver_package_state == 'absent' }}"
   register: install_driver_rhel8
   environment: "{{proxy_env if proxy_env is defined else {}}}"
-  when: ansible_distribution_major_version > '7'
+  when: ansible_distribution_major_version > '7' and ansible_distribution_major_version < '9'
 
-- name: Set install_driver.changed var for RHEL 7/8
+- name: install driver packages RHEL 9 and newer
+  dnf:
+    name: "{{ nvidia_driver_package_version | ternary('@nvidia-driver:'+nvidia_driver_package_version, '@nvidia-driver:'+nvidia_driver_rhel_branch+'-open') }}"
+    state: "{{ nvidia_driver_package_state }}"
+    autoremove: "{{ nvidia_driver_package_state == 'absent' }}"
+  register: install_driver_rhel9
+  environment: "{{proxy_env if proxy_env is defined else {}}}"
+  when: ansible_distribution_major_version > '8'
+
+- name: Set install_driver.changed var for RHEL 7/8/9
   debug:
       msg: Driver installed for RHEL
   when: install_driver_rhel7.changed or install_driver_rhel8.changed
   register: install_driver
-  changed_when: install_driver_rhel7.changed or install_driver_rhel8.changed
+  changed_when: install_driver_rhel7.changed or install_driver_rhel8.changed or install_driver_rhel9.changed
