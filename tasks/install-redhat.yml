@@ -97,6 +97,7 @@
     regexp: 'modeset=1'
     line: 'options nvidia-drm modeset=0'
     backup: true
+    ignore_errors: true
 
 - name: Set install_driver.changed var for RHEL 7/8/9
   debug:
