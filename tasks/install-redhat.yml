@@ -90,6 +90,11 @@
   environment: "{{proxy_env if proxy_env is defined else {}}}"
   when: ansible_distribution_major_version > '8'
 
+- name: Check if nvidia-modeset.conf exists
+  stat:
+    path: /etc/modprobe.d/nvidia-modeset.conf
+  register: modeset_conf_file
+
 - name: Update nvidia-modeset.conf modeset value (modeset=1 with modeset=0)
   become: true
   lineinfile:
@@ -97,7 +102,7 @@
     regexp: 'modeset=1'
     line: 'options nvidia-drm modeset=0'
     backup: true
-    ignore_errors: true
+  when: modeset_conf_file.stat.exists
 
 - name: Set install_driver.changed var for RHEL 7/8/9
   debug:
